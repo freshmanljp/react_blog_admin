@@ -1,0 +1,10 @@
+.login-div{
+  margin: 150px auto;
+  width: 400px;
+}
+.ant-input-affix-wrapper-lg {
+  margin-bottom: 15px;
+}
+body{
+  background-color: #f0f0f0;
+}
