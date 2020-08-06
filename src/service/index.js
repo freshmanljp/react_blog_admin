@@ -16,3 +16,15 @@ export const checkLogin = (userData) => {
 export const getTypeList = () => {
   return service.get('/admin/typeList')
 }
+// 添加文章请求
+export const addArticle = (data) => {
+  return service.post('/admin/addArticle', data)
+}
+// 修改文章请求
+export const updateArticle = (data) => {
+  return service.post('/admin/updateArticle', data)
+}
+// 获取文章列表请求
+export const getArticleList = (data) => {
+  return service.get('/admin/getArticleList', data)
+}
