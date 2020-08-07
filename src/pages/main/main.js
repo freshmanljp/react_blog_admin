@@ -13,9 +13,11 @@ export default function Main(props) {
     <div>
       <Frame path={path}>
         <Switch>
+          {/* 带参数和不带参数的得单独写成两个路由 */}
           <Route path="/main/addArticle" exact component={AddArticle}></Route>
+          <Route path="/main/addArticle/:id" exact component={AddArticle}></Route>
           <Route path="/main/articleList" exact component={ArticleList}></Route>
-          <Redirect path="/main" exact to="/main/addArticle"/>
+          <Redirect path="/main" exact to="/main/articleList"/>
           <Redirect to="/404"/>
         </Switch>
       </Frame>

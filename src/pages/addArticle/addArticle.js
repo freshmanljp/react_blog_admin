@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Button, Col, Row, Input, Select, DatePicker, Form, message} from 'antd'
 import './addArticle.css'
 import marked from 'marked'
-import { getTypeList, addArticle, updateArticle } from '../../service'
+import { getTypeList, addArticle, updateArticle, getArticleById } from '../../service'
 
 const Option = Select.Option
 const TextArea = Input.TextArea
@@ -12,6 +12,9 @@ export default function AddArticle(props) {
   const [markdownContent,setMarkdownContent] = useState('预览内容') //html内容
   const [introducehtml,setIntroducehtml] = useState('等待编辑') //简介的html内容
   const [typeInfo ,setTypeInfo] = useState([]) // 文章类别信息
+
+  // 创建表单form的ref
+  const formEl = useRef(null);
 
   // markde相关配置
   marked.setOptions({
@@ -57,7 +60,7 @@ export default function AddArticle(props) {
   // !!!!!!!!!!!!!!!!!!!!!!!!!!好好理解好useCallback的含义和使用场合！！！！！！！！！！！！！！！！！！！！！
   const stableGetTypeListFun = useCallback(getTypeListFun, [])
   // 保存按钮表单提交处理
-  const onFinish = values => {
+  const onFinish = async (values) => {
     // 构造提交数据
     const submitData = {
       type_Id: values.selectedType,
@@ -68,15 +71,13 @@ export default function AddArticle(props) {
       // 阅读量先写死
       view_count: Math.ceil(Math.random()*100)+1000
     }
-    // console.log(submitData)
-    // 根据articleId是否为0判断是否已经有保存记录
     if (articleId === 0) {
       addArticle(submitData).then(res => {
         if (res.data.code === 200 && res.data.data.insertSuccess) {
-          message.success('文章保存成功')
+          message.success('文章提交成功')
           setArticleId(res.data.data.insertId)
         } else {
-          message.error('文章保存失败')
+          message.error('文章提交失败')
         }
       })
     } else {
@@ -91,10 +92,52 @@ export default function AddArticle(props) {
       })
     }
   }
+  const handleSubmit = () => {
+    // 先验证表单是否合法
+    formEl.current.validateFields().then(() => {
+      // 手动触发submit提交事件
+      formEl.current.submit()
+      setTimeout(() => {
+        props.history.push('/main/articleList')
+      }, 100)
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+  // 若是修改文章页面，则读取文章详细信息填充表单页
+  const showArticleData = (id) => {
+    let articleData = {}
+    getArticleById(id).then(res => {
+      if (res.data.code === 200) {
+        // 获取文章信息并填充表单域
+        articleData = res.data.data[0]
+        formEl.current.setFieldsValue({
+          selectedType: articleData.type_id,
+          articleTitle: articleData.title,
+          articleContent: articleData.content,
+          introducemd: articleData.introduce
+          // showDate: articleData.addTime
+        })
+        const html1 = marked(articleData.content)
+        setMarkdownContent(html1)
+        const html2 = marked(articleData.introduce)
+        setIntroducehtml(html2)
+      } else {
+        console.log(res.data.data)
+      }
+    })
+  }
   // 在挂载时获取相关数据
   useEffect(() => {
+    const tempId = props.match.params.id
     stableGetTypeListFun()
-  }, [stableGetTypeListFun])
+    // 根据是否有路由参数Id传入判断是修改还是新建文章
+    if(tempId) {
+      showArticleData(tempId)
+      // 记得设置文章保存的id，防止数据库重复保存文章数据
+      setArticleId(tempId)
+    }
+  }, [stableGetTypeListFun, props.match.params.id])
   return (
     <div>
       {/* 整个文章添加页面form表单设置 */}
@@ -102,6 +145,7 @@ export default function AddArticle(props) {
         name="basic"
         initialValues={{ selectedType: '文章类别' }}
         onFinish={onFinish}
+        ref={formEl}
       >
         <Row gutter={20}>
           {/* 文章内容和标题部分分栏 */}
@@ -162,7 +206,7 @@ export default function AddArticle(props) {
                 <Button htmlType="submit">暂存文章</Button>
               </Col>
               <Col>
-                <Button type="primary" htmlType="submit">发布文章</Button>
+                <Button type="primary" onClick={handleSubmit}>发布文章</Button>
               </Col>
             </Row>
             {/* 文章简介编辑框 */}
