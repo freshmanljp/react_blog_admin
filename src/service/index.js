@@ -3,7 +3,7 @@ import axios from 'axios'
 const isDev = process.env.NODE_ENV === 'development'
 
 const service = axios.create({
-  baseURL: isDev ? 'http://localhost:7002' : '',
+  baseURL: isDev ? 'http://localhost:7001' : '',
   // `withCredentials` 表示跨域请求时是否需要使用cookies
   withCredentials: true, // 默认的
 })

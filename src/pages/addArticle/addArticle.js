@@ -3,6 +3,7 @@ import { Button, Col, Row, Input, Select, DatePicker, Form, message} from 'antd'
 import './addArticle.css'
 import marked from 'marked'
 import { getTypeList, addArticle, updateArticle, getArticleById } from '../../service'
+import { debounce } from '../../sysFun'
 
 const Option = Select.Option
 const TextArea = Input.TextArea
@@ -14,7 +15,11 @@ export default function AddArticle(props) {
   const [typeInfo ,setTypeInfo] = useState([]) // 文章类别信息
 
   // 创建表单form的ref
-  const formEl = useRef(null);
+  const formEl = useRef(null)
+  // 创建content文本框的ref
+  const contentEl = useRef(null)
+  // 创建introduce文本框的ref
+  const introduceEl = useRef(null)
 
   // markde相关配置
   marked.setOptions({
@@ -33,14 +38,14 @@ export default function AddArticle(props) {
   })
   // *****************这里需要一个节流处理**************************
   // 文章内容改变处理
-  const contentChange = (e) => {
-    const content = e.target.value
+  const contentChange = () => {
+    const content = contentEl.current.props.value
     const html = marked(content)
     setMarkdownContent(html)
   }
   // 简介内容改变处理
-  const introduceChange = (e) => {
-    const introduce = e.target.value
+  const introduceChange = () => {
+    const introduce = introduceEl.current.props.value
     const html = marked(introduce)
     setIntroducehtml(html)
   }
@@ -188,7 +193,8 @@ export default function AddArticle(props) {
                     className="markdown-content" 
                     rows={20}  
                     placeholder="文章内容"
-                    onChange={contentChange}
+                    ref={contentEl}
+                    onChange={debounce(contentChange, 500)}
                   />
                 </Form.Item>
               </Col>
@@ -218,7 +224,8 @@ export default function AddArticle(props) {
                   <TextArea 
                     rows={4} 
                     placeholder="文章简介"
-                    onChange={introduceChange}
+                    ref={introduceEl}
+                    onChange={debounce(introduceChange, 500)}
                   />
                 </Form.Item>
                 <div className="introduce-html" dangerouslySetInnerHTML={{__html: introducehtml}}></div>
